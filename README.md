@@ -1,8 +1,9 @@
 # guile-jtd
 jump-to-debugger: like Python's pdb.set_trace(), but for Guile
 
-The `(jtd)` module (jump to debugger) for Guile provides a procedure 
+The `(jtd)` module for Guile provides a procedure (jump-to-debugger) 
 for escaping to the Guile REPL for the purpose of debugging code.  
+It should be considered beta code, still under development.
 
 When debugging Guile code, it is usally better to compile with 
 optimization level 0. You can use
