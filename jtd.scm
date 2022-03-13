@@ -49,8 +49,8 @@
 (use-modules (system base compile))
 
 (use-modules (system repl command))
+(use-modules (system repl common))
 (use-modules (system repl debug))
-;;(use-modules (system repl repl)) ;; replaced by @ as in command
 
 (use-modules (system vm frame))
 (use-modules (system vm program))
@@ -72,16 +72,16 @@
 (define add-trap-wrapper! (@@ (system vm trap-state) add-trap-wrapper!))
 (define make-trap-wrapper (@@ (system vm trap-state) make-trap-wrapper))
 (define source-string (@@ (system vm trap-state) source-string))
-
-;; for debugging
-(use-modules (system repl common))
-(use-modules (system vm debug))
-(define handler-for-index (@@ (system vm trap-state) handler-for-index))
-(define trap-state-wrappers (@@ (system vm trap-state) trap-state-wrappers))
-(define trap-state->trace-level (@@ (system vm trap-state)
-                                    trap-state->trace-level))
 (define ephemeral-handler-for-index (@@ (system vm trap-state)
                                         ephemeral-handler-for-index))
+(define trap-state->trace-level (@@ (system vm trap-state)
+                                    trap-state->trace-level))
+
+;; for development
+#|
+(define handler-for-index (@@ (system vm trap-state) handler-for-index))
+(define trap-state-wrappers (@@ (system vm trap-state) trap-state-wrappers))
+|#
 
 ;; ============================================================================
 
@@ -212,7 +212,6 @@ Show lines around current instruction address."
   (and=>
    (repl-debug repl)
    (lambda (debug)
-     ;;(sf "show 1:\n")
      (let* ((index (debug-index debug))
 	    (frames (debug-frames debug))
 	    (frame (vector-ref frames index)))
@@ -224,16 +223,13 @@ Show lines around current instruction address."
   (if (not (eqv? 'debug (vm-engine)))
       (set-vm-engine! 'debug))
 
-  (catch 'quit
+  (catch 'quit ;; needed?
     (lambda ()
       ;; See error-handling.scm(call-with-error-handling).
-      (let* (
-             (stack (narrow-stack->vector (make-stack #t) 3))
+      (let* ((stack (narrow-stack->vector (make-stack #t) 3))
              (debug (make-debug stack 0 "jumped to debugger")))
         (show-source-location (frame-source (vector-ref stack 0)))
-        
         ((@ (system repl repl) start-repl) #:debug debug)))
-        ;;(start-repl #:debug debug)))
     (lambda (key . args)
       (sf "jtd: QUIT\n"))))
 
