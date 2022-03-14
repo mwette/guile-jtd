@@ -61,10 +61,7 @@
 (use-modules (ice-9 control))
 (use-modules (ice-9 rdelim))
 
-(use-modules (ice-9 pretty-print))
-(define pp pretty-print)
 (define (sf fmt . args) (apply simple-format #t fmt args))
-
 
 ;;(define repl-next-resumer (@@ (system repl command) repl-next-resumer))
 (define the-trap-state (@@ (system vm trap-state) the-trap-state))
@@ -79,6 +76,9 @@
 
 ;; for development
 #|
+(use-modules (ice-9 pretty-print))
+(define pp pretty-print)
+
 (define handler-for-index (@@ (system vm trap-state) handler-for-index))
 (define trap-state-wrappers (@@ (system vm trap-state) trap-state-wrappers))
 |#
@@ -160,12 +160,12 @@
 (define (get-lines filename lineno)
   (call-with-input-file (find-path filename)
     (lambda (port)
-      (let iter ((prev #f) (curr #f) (offs lineno))
+      (let loop ((prev #f) (curr #f) (offs lineno))
         (case offs
-          ((1) (iter (cons " " (read-line port)) curr (1- offs)))
-          ((0) (iter prev (cons "*" (read-line port)) (1- offs)))
+          ((1) (loop (cons " " (read-line port)) curr (1- offs)))
+          ((0) (loop prev (cons "*" (read-line port)) (1- offs)))
           ((-1) (list prev curr (cons " " (read-line port))))
-          (else (read-line port) (iter prev curr (1- offs))))))))
+          (else (read-line port) (loop prev curr (1- offs))))))))
 
 (define* (show-source-location source #:optional (port #t))
   (let ((file (cadr source))
@@ -220,9 +220,13 @@ Show lines around current instruction address."
 ;; ============================================================================
 
 (define (jump-to-debugger)
-  (if (not (eqv? 'debug (vm-engine)))
+  (if (not (eq? 'debug (vm-engine)))
       (set-vm-engine! 'debug))
 
+  ;; kludge to avoid welcome message in script usage:
+  (unless (pair? (fluid-ref *repl-stack*))
+    (fluid-set! *repl-stack* (list (make-repl (current-language)))))
+  
   (catch 'quit ;; needed?
     (lambda ()
       ;; See error-handling.scm(call-with-error-handling).
