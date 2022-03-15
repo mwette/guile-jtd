@@ -75,12 +75,12 @@
                                     trap-state->trace-level))
 
 ;; for development
-#|
 (use-modules (ice-9 pretty-print))
 (define pp pretty-print)
 
 (define handler-for-index (@@ (system vm trap-state) handler-for-index))
 (define trap-state-wrappers (@@ (system vm trap-state) trap-state-wrappers))
+#|
 |#
 
 ;; ============================================================================
@@ -118,9 +118,9 @@
   (define (source=? a b)
     (if line?
         (or
-         (and (not a) b)
-         (and a (not b))
-         (and (equal? (source:file a) (source:file b))
+         (and (not a) (not b))
+         (and a b
+	      (equal? (source:file a) (source:file b))
               (equal? (source:line a) (source:line b))))
         (equal? a b)))
   
@@ -232,6 +232,7 @@ Show lines around current instruction address."
       ;; See error-handling.scm(call-with-error-handling).
       (let* ((stack (narrow-stack->vector (make-stack #t) 3))
              (debug (make-debug stack 0 "jumped to debugger")))
+	(pp stack)
         (show-source-location (frame-source (vector-ref stack 0)))
         ((@ (system repl repl) start-repl) #:debug debug)))
     (lambda (key . args)
