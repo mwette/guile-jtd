@@ -220,8 +220,8 @@ Show lines around current instruction address."
 ;; ============================================================================
 
 (define (jump-to-debugger)
-  (if (not (eq? 'debug (vm-engine)))
-      (set-vm-engine! 'debug))
+  (when (not (eq? 'debug (vm-engine)))
+    (error "Jump-to-debugger requires debug VM: use --debug arg to guile."))
 
   ;; kludge to avoid welcome message in script usage:
   (unless (pair? (fluid-ref *repl-stack*))
@@ -232,7 +232,6 @@ Show lines around current instruction address."
       ;; See error-handling.scm(call-with-error-handling).
       (let* ((stack (narrow-stack->vector (make-stack #t) 3))
              (debug (make-debug stack 0 "jumped to debugger")))
-	(pp stack)
         (show-source-location (frame-source (vector-ref stack 0)))
         ((@ (system repl repl) start-repl) #:debug debug)))
     (lambda (key . args)
