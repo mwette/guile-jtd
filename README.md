@@ -77,63 +77,32 @@ scheme@(guile-user)>
 
 # Usage in Scripts
 
-This works, but the repeated welcome messages can be annoying.
+This seems to work, but one must provide the `--debug` arg to `guile`.
 ```
-$ guile -e foo foo.scm
+$ guile --debug -e foo foo.scm
 foo.scm: line 7
         (if (< c 4)
 *           (jump-to-debugger))
         (simple-format #t "foo a= ~S\n" (*a*))
-GNU Guile 3.0.7
-Copyright (C) 1995-2021 Free Software Foundation, Inc.
-
-Guile comes with ABSOLUTELY NO WARRANTY; for details type `,show w'.
-This program is free software, and you are welcome to redistribute it
-under certain conditions; type `,show c' for details.
-
-Enter `,help' for help.
-scheme@(guile-user)> ,next-line
+scheme@(guile-user) [1]> ,next-line
 foo.scm: line 4
   (define (foo . args)
 *     (let* ((b (+ (*a*) 1))
              (c (+ (*a*) b 2)))
-GNU Guile 3.0.7
-Copyright (C) 1995-2021 Free Software Foundation, Inc.
-
-Guile comes with ABSOLUTELY NO WARRANTY; for details type `,show w'.
-This program is free software, and you are welcome to redistribute it
-under certain conditions; type `,show c' for details.
-
-Enter `,help' for help.
-scheme@(guile-user)> ,next-line
+scheme@(guile-user) [1]> ,next-line
 foo.scm: line 8
             (jump-to-debugger))
 *       (simple-format #t "foo a= ~S\n" (*a*))
         (simple-format #t "foo b= ~S\n" b)
-GNU Guile 3.0.7
-Copyright (C) 1995-2021 Free Software Foundation, Inc.
-
-Guile comes with ABSOLUTELY NO WARRANTY; for details type `,show w'.
-This program is free software, and you are welcome to redistribute it
-under certain conditions; type `,show c' for details.
-
-Enter `,help' for help.
-scheme@(guile-user)> ,next-line
+scheme@(guile-user) [1]> ,next-line
 foo a= 0
 foo.scm: line 4
   (define (foo . args)
 *     (let* ((b (+ (*a*) 1))
              (c (+ (*a*) b 2)))
-GNU Guile 3.0.7
-Copyright (C) 1995-2021 Free Software Foundation, Inc.
-
-Guile comes with ABSOLUTELY NO WARRANTY; for details type `,show w'.
-This program is free software, and you are welcome to redistribute it
-under certain conditions; type `,show c' for details.
-
-Enter `,help' for help.
-scheme@(guile-user)> 
-
+scheme@(guile-user) [1]> ,quit
+foo b= 1
+foo c= 3
 ```
 
 # todo
