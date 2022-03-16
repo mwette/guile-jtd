@@ -18,28 +18,6 @@
 ;;; Notes
 ;;
 ;; still beta -- not stable
-;;
-;; usage:
-;; $ cat > foo.scm
-;;   (define (foo)
-;;      ....
-;;      (if odd-behavior (jump-to-debugger))
-;;      ...)
-;; $ guild compile -O0 foo.scm
-;; $ guile
-;; > (load "foo.scm")
-;; > (foo)
-;; foo.scm: line 11
-;;    (prev-line-of-code 1)
-;; *  (if odd-behavior (jump-to-debugger))
-;;    (next-line-of-code 1)
-;; [1]>
-;;
-;; probably requires at least guile 3.0.0
-
-;; todo:
-;; 1) saved-ports (see error-handling.scm)
-;; 2) emacs and/or geiser integration
 
 ;;; Code
 
