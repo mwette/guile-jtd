@@ -18,6 +18,14 @@
 ;;; Notes
 ;;
 ;; still beta -- not stable
+;;
+;; In guile-3.0.0, module/langauge/tree-il/compile-bytecode.scm, line 913:
+;; changing
+;;   (maybe-imit-source src)
+;; to
+;;   ;;(maybe-imit-source src)
+;; will elimiate "jumping back" in stepping.
+
 
 ;;; Code
 
@@ -168,6 +176,18 @@
 
 ;; ============================================================================
 
+(define-meta-command ((list extra) repl)
+  "list
+
+Show lines around current instruction address."
+  (and=>
+   (repl-debug repl)
+   (lambda (debug)
+     (let* ((index (debug-index debug))
+	    (frames (debug-frames debug))
+	    (frame (vector-ref frames index)))
+       (and=> (frame-source frame) show-source-location)))))
+
 (define-meta-command ((next-line debug) repl)
   "next-line
 Step until control reaches a different source location in the current frame.
@@ -183,17 +203,27 @@ Step until control reaches a different source location in the current frame."
       (set-vm-trace-level! (trap-state->trace-level (the-trap-state))))
     (throw 'quit)))
 
-(define-meta-command ((list extra) repl)
-  "list
+(define-meta-command ((set-local! debug) repl (var) value)
+  "set-local!
+Set local variables.
 
-Show lines around current instruction address."
-  (and=>
-   (repl-debug repl)
-   (lambda (debug)
-     (let* ((index (debug-index debug))
-	    (frames (debug-frames debug))
-	    (frame (vector-ref frames index)))
-       (and=> (frame-source frame) show-source-location)))))
+Set locally-bound variable in the selected frame."
+  (let* ((debug (repl-debug repl))
+         (index (debug-index debug))
+         (frames (debug-frames debug))
+	 (frame (and (> (vector-length frames) index)
+		     (vector-ref frames index)))
+	 (bindings (and frame (frame-bindings frame)))
+	 (name (syntax->datum var))
+	 (binding (and bindings (frame-lookup-binding frame name)))
+	 )
+    (cond
+     ((not frame) (format #t "no frame to debug\n"))
+     ((not binding) (format #t "binding for ~S not found\n" name))
+     (else
+      (let ((ref (binding-ref binding)))
+	(binding-set! binding value)
+	(sf "Setting ~S from ~S to ~S\n" name ref value))))))
 
 ;; ============================================================================
 
