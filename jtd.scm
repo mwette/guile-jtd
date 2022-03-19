@@ -21,10 +21,10 @@
 ;;
 ;; In guile-3.0.0, module/langauge/tree-il/compile-bytecode.scm, line 913:
 ;; changing
-;;   (maybe-imit-source src)
+;;   (maybe-emit-source src)
 ;; to
-;;   ;;(maybe-imit-source src)
-;; will elimiate "jumping back" in stepping.
+;;   ;;(maybe-emit-source src)
+;; will eliminate "jumping back" in stepping.
 
 
 ;;; Code
