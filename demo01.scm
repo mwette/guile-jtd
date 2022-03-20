@@ -1,6 +1,6 @@
 (use-modules (jtd))
 (define *a* (make-parameter 0))
-(define (foo . args)
+(define (demo01 . args)
     (let* ((b (+ (*a*) 1))
            (c (+ (*a*) b 2)))
       (if (< c 4)
