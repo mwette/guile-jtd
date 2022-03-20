@@ -42,21 +42,10 @@ foo.scm: line 7
 *           (jump-to-debugger))
         (simple-format #t "foo a= ~S\n" (*a*))
 scheme@(guile-user) [1]> ,next-line
-foo.scm: line 4
-  (define (foo . args)
-*     (let* ((b (+ (*a*) 1))
-             (c (+ (*a*) b 2)))
-scheme@(guile-user) [1]> ,next-line
 foo.scm: line 8
             (jump-to-debugger))
 *       (simple-format #t "foo a= ~S\n" (*a*))
         (simple-format #t "foo b= ~S\n" b)
-scheme@(guile-user) [1]> ,next-line
-foo a= 0
-foo.scm: line 4
-  (define (foo . args)
-*     (let* ((b (+ (*a*) 1))
-             (c (+ (*a*) b 2)))
 scheme@(guile-user) [1]> ,next-line
 foo.scm: line 9
         (simple-format #t "foo a= ~S\n" (*a*))
@@ -85,21 +74,10 @@ foo.scm: line 7
 *           (jump-to-debugger))
         (simple-format #t "foo a= ~S\n" (*a*))
 scheme@(guile-user) [1]> ,next-line
-foo.scm: line 4
-  (define (foo . args)
-*     (let* ((b (+ (*a*) 1))
-             (c (+ (*a*) b 2)))
-scheme@(guile-user) [1]> ,next-line
 foo.scm: line 8
             (jump-to-debugger))
 *       (simple-format #t "foo a= ~S\n" (*a*))
         (simple-format #t "foo b= ~S\n" b)
-scheme@(guile-user) [1]> ,next-line
-foo a= 0
-foo.scm: line 4
-  (define (foo . args)
-*     (let* ((b (+ (*a*) 1))
-             (c (+ (*a*) b 2)))
 scheme@(guile-user) [1]> ,quit
 foo b= 1
 foo c= 3
