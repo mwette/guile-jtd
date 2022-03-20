@@ -19,12 +19,8 @@
 ;;
 ;; still beta -- not stable
 ;;
-;; In guile-3.0.0, module/langauge/tree-il/compile-bytecode.scm, line 913:
-;; changing
-;;   (maybe-emit-source src)
-;; to
-;;   ;;(maybe-emit-source src)
-;; will eliminate "jumping back" in stepping.
+;; If you see next-line stepping back to the start of a
+;; sequence form (e.g., let), then see guile-bugs #54478
 
 
 ;;; Code
@@ -46,8 +42,8 @@
 
 (use-modules (ice-9 control))
 (use-modules (ice-9 rdelim))
-
-(define (sf fmt . args) (apply simple-format #t fmt args))
+(use-modules (ice-9 format))
+(use-modules (ice-9 pretty-print))
 
 ;;(define repl-next-resumer (@@ (system repl command) repl-next-resumer))
 (define the-trap-state (@@ (system vm trap-state) the-trap-state))
@@ -61,13 +57,37 @@
                                     trap-state->trace-level))
 
 ;; for development
-(use-modules (ice-9 pretty-print))
+#|
+(define (sf fmt . args) (apply simple-format #t fmt args))
 (define pp pretty-print)
-
 (define handler-for-index (@@ (system vm trap-state) handler-for-index))
 (define trap-state-wrappers (@@ (system vm trap-state) trap-state-wrappers))
-#|
 |#
+
+;; verbatim copy from command.scm
+(define-syntax define-stack-command
+  (lambda (x)
+    (syntax-case x ()
+      ((_ (name repl . args) docstring body body* ...)
+       #`(define-meta-command (name repl . args)
+           docstring
+           (let ((debug (repl-debug repl)))
+             (if debug
+                 (letrec-syntax
+                     ((#,(datum->syntax #'repl 'frames)
+                       (identifier-syntax (debug-frames debug)))
+                      (#,(datum->syntax #'repl 'message)
+                       (identifier-syntax (debug-error-message debug)))
+                      (#,(datum->syntax #'repl 'index)
+                       (identifier-syntax
+                        (id (debug-index debug))
+                        ((set! id exp) (set! (debug-index debug) exp))))
+                      (#,(datum->syntax #'repl 'cur)
+                       (identifier-syntax
+                        (vector-ref #,(datum->syntax #'repl 'frames)
+                                    #,(datum->syntax #'repl 'index)))))
+                   body body* ...)
+                 (format #t "Nothing to debug.~%"))))))))
 
 ;; ============================================================================
 
@@ -176,17 +196,11 @@
 
 ;; ============================================================================
 
-(define-meta-command ((list extra) repl)
+(define-stack-command ((list extra) repl)
   "list
 
 Show lines around current instruction address."
-  (and=>
-   (repl-debug repl)
-   (lambda (debug)
-     (let* ((index (debug-index debug))
-	    (frames (debug-frames debug))
-	    (frame (vector-ref frames index)))
-       (and=> (frame-source frame) show-source-location)))))
+  (and=> (frame-source cur) show-source-location))
 
 (define-meta-command ((next-line debug) repl)
   "next-line
@@ -203,27 +217,26 @@ Step until control reaches a different source location in the current frame."
       (set-vm-trace-level! (trap-state->trace-level (the-trap-state))))
     (throw 'quit)))
 
-(define-meta-command ((set-local! debug) repl (var) value)
+(define-stack-command ((set-local! debug) repl (var) value)
   "set-local!
 Set local variables.
 
 Set locally-bound variable in the selected frame."
-  (let* ((debug (repl-debug repl))
-         (index (debug-index debug))
-         (frames (debug-frames debug))
-	 (frame (and (> (vector-length frames) index)
-		     (vector-ref frames index)))
-	 (bindings (and frame (frame-bindings frame)))
-	 (name (syntax->datum var))
-	 (binding (and bindings (frame-lookup-binding frame name)))
-	 )
-    (cond
-     ((not frame) (format #t "no frame to debug\n"))
-     ((not binding) (format #t "binding for ~S not found\n" name))
-     (else
-      (let ((ref (binding-ref binding)))
-	(binding-set! binding value)
-	(sf "Setting ~S from ~S to ~S\n" name ref value))))))
+  (let* ((name (syntax->datum var))
+	 (binding (frame-lookup-binding cur name)))
+    (if binding
+	(let ((ref (binding-ref binding)))
+	  (binding-set! binding value)
+	  (format #t "Setting `~s' from ~s to ~s.\n" name ref value))
+	(format #t "No binding was found for `~s'.\n" name))))
+    
+(define-stack-command ((frame-bindings debug) repl)
+  "frame-bindings
+Show frame bindings.
+
+Show frame bindings."
+  (let* ((bindings (frame-bindings cur)))
+    (pretty-print bindings)))
 
 ;; ============================================================================
 
@@ -243,11 +256,10 @@ Set locally-bound variable in the selected frame."
         (show-source-location (frame-source (vector-ref stack 0)))
         ((@ (system repl repl) start-repl) #:debug debug)))
     (lambda (key . args)
-      (sf "jtd: QUIT\n"))))
+      (format #t "jtd: QUIT\n"))))
 
 
 (define (kill-opt)
   (default-optimization-level 0))
-
 
 ;; --- last line ---
