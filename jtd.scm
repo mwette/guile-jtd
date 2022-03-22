@@ -174,8 +174,8 @@
           (else (read-line port) (loop prev curr (1- offs))))))))
 
 (define* (show-source-location source #:optional (port #t))
-  (let ((file (cadr source))
-        (line (caddr source)))
+  (let ((file (source:file source))
+        (line (source:line source)))
     (simple-format port "~A: line ~S\n" file (1+ line))
     (for-each
      (lambda (pair)
