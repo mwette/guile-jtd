@@ -37,11 +37,10 @@ List procedure.
 Show lines around current instruction address."
   (let* ((prog (module-ref (current-module) proc))
 	 (srcs (program-sources-pre-retire prog))
-	 (first-src (first srcs))
-	 (last-src (last srcs))
-	 (filename (source:file first-src))
-	 (first-line (source:line first-src))
-	 (last-line (source:line last-src))
+	 (filename (source:file (car srcs)))
+	 (lines (map source:line srcs))
+	 (first-line (apply min lines))
+	 (last-line (apply max lines))
 	 (path (find-path filename)))
     (call-with-input-file path
       (lambda (port)
