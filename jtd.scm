@@ -174,8 +174,8 @@
           (else (read-line port) (loop prev curr (1- offs))))))))
 
 (define* (show-source-location source #:optional (port #t))
-  (let ((file (cadr source))
-        (line (caddr source)))
+  (let ((file (source:file source))
+        (line (source:line source)))
     (simple-format port "~A: line ~S\n" file (1+ line))
     (for-each
      (lambda (pair)
@@ -202,6 +202,28 @@
 Show lines around current instruction address."
   (and=> (frame-source cur) show-source-location))
 
+(define-meta-command ((list-procedure extra) repl proc . args)
+  "list-procedure proc
+List procedure.
+
+Show lines around current instruction address."
+  (let* ((prog (module-ref (current-module) proc))
+	 (srcs (program-sources-pre-retire prog))
+	 (filename (source:file (car srcs)))
+	 (lines (map source:line srcs))
+	 (first-line (apply min lines))
+	 (last-line (apply max lines))
+	 (path (find-path filename)))
+    (call-with-input-file path
+      (lambda (port)
+	(let loop ((lineno 0) (line (read-line port)))
+	  (cond
+	   ((< lineno first-line) (loop (1+ lineno) (read-line port)))
+	   ((> lineno last-line))
+	   (else
+	    (display line) (newline)
+	    (loop (1+ lineno) (read-line port)))))))))
+	    
 (define-meta-command ((next-line debug) repl)
   "next-line
 Step until control reaches a different source location in the current frame.
